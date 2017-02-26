@@ -1,0 +1,132 @@
+let
+
+Y = \(f:t) -> (\(x:t)-> f (x x)) (\(x:t)-> f (x x));
+Theta = (\(x:t) (y:t) -> (y (\(z:t) -> x x y z))) (\(x:t) (y:t) -> (y (\(z:t) -> x x y z)));
+
+
+if = \(c:t) (t:t) (e:t) -> c t e;
+true = \(t:t) (f:t) -> t;
+false = \(t:t) (f:t) -> f;
+or    = \(x:t) (y:t) -> if x true y;
+and   = \(x:t) (y:t) -> if x y false;
+
+
+
+zero  = \(s : t->t) (z:t) -> z;
+one   = \(s : t->t) (z:t) -> s z;
+two   = \(s : t->t) (z:t) -> s (s z);
+three = \(s : t->t) (z:t) -> s( s (s z));
+four  = \(s : t->t) (z:t) -> s ( s(  s (s z)));
+five  = suc four;
+six   = (mul two three);
+seven = suc six;
+eight = (mul four two);
+nine  = (mul three three);
+ten   = (suc nine);
+
+
+suc   = \(n : (t->t) -> t -> t) (s:t->t) (z:t) -> s (n s z); 
+
+plus  = \( m : (t->t) -> t -> t ) 
+	 ( n : (t->t) -> t -> t	) ->
+		\(s: t -> t) ( z : t)  -> n s ( m s z);	
+
+mul   = \( m : (t->t) -> t -> t ) 
+	 ( n : (t->t) -> t -> t	) ->
+		\(s: t -> t) ( z : t)  -> n ( m s) z;	
+
+iszero = \(n:t) -> n  (\(x:t)->false) true;
+
+pred   = \(n:t) (s:t) (z:t) -> n (\(g:t) (h:t) -> h (g s)) (\(u:t)-> z) (\(u:t) -> u);
+
+sub    = \(m:t) (n:t)  -> (n pred) m;  
+
+equal  = \(m:t) (n:t)  -> (and (iszero (sub m n)) (iszero (sub n m)));
+
+ge     = \(m:t) (n:t)  -> iszero (sub n m);
+
+le     = \(m:t) (n:t)  -> iszero (sub m n);
+
+
+divrec    = \(f:t) (n:t) (d:t) (c:t) -> if (ge n d) (f (sub n d) d (suc c)) c;  
+div       = \(n:t) (d:t) -> Theta divrec n d zero ;
+
+
+
+pair  = \(x: (t->t) -> t -> t) 
+	 (y: (t->t) -> t -> t) 
+	 (z: ((t->t) -> t -> t)  ->    ((t->t) -> t -> t)   ->  ((t->t) -> t -> t)) -> z x y;
+
+fst   = \(p: (
+		( (t->t) -> t -> t)  ->   
+		( (t->t) -> t -> t)  ->  
+		( (t->t) -> t -> t)  
+	     ) -> 
+	     ((t -> t) -> t -> t) 
+	 ) 
+	
+	-> 	(p (\(x:((t->t) -> t -> t) ) 
+		(y: ((t->t) -> t -> t)) -> x));
+
+snd   = \(p: (
+		( (t->t) -> t -> t)  ->   
+		( (t->t) -> t -> t)  ->  
+		( (t->t) -> t -> t)  
+	     ) -> 
+	     ((t -> t) -> t -> t) 
+	 ) 
+	
+	-> 	(p (\(x:((t->t) -> t -> t) ) 
+		(y: ((t->t) -> t -> t)) -> y));
+
+
+
+nil = pair true true;
+isnil = fst;
+cons = \(h:t) (f:t) -> pair false (pair h f);
+head = \(z:t) -> fst (snd z); 
+tail =  \(z:t) -> snd (snd z);
+
+lengthrec  = \(f:t) (z:t) -> if (isnil z) zero (plus one (f (tail z)));
+length = Theta lengthrec;  
+
+sumrec     = \(f:t) ( l : t) -> if (isnil l) zero (plus (head l) (f ( tail l)));
+sum    = Theta sumrec;
+
+
+showbool   = \( x : t) -> if x TRUE FALSE;
+showdigit  = \(n:t)    -> if (equal n zero)   0 
+				( if (equal n one) 1 
+					(if (equal n two) 2
+						(if (equal n three) 3
+						 	( if (equal n four) 4
+								(if (equal n five) 5
+									(if (equal n six) 6
+										(if (equal n seven) 7
+											(if (equal n eight) 8 9)
+										)
+									)
+								)
+							)
+						)
+					)
+				);
+showint    = \(n:t)    -> showdigit (div n ten);  
+
+
+
+
+fac = \(n:t) -> fst (n (\(z:t) -> pair (mul (suc (snd z)) (fst z)) (suc (snd z)) ) (pair one zero));
+facrec = \(f:t) (x:t) -> if (iszero x) one (mul x (f (pred x)));
+fiborec = \(f:t) (x:t) -> if (iszero (pred x)) one (plus  (f (pred x)) (f (pred (pred x))));
+
+fac = Theta facrec;
+fibo = Theta fiborec;
+
+in 
+
+(plus one (suc (snd (pair one one))));
+
+
+
+
